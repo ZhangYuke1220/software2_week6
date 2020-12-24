@@ -57,10 +57,11 @@ static void count_symbols(const char *filename)
   */
     char buf;
     while (fread(&buf, sizeof(char), 1, fp))
-        symbol_count[(int)(buf-'\0')]++;
+        symbol_count[buf - '\0'] += 1;
     
     for (int i=0; i<nsymbols; ++i)
-        printf("%4d", symbol_count[i]);
+        printf("%d  ", symbol_count[i]);
+    printf("\n");
 
     fclose(fp);
 }
