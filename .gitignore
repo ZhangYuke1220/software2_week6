@@ -55,7 +55,7 @@ dkms.conf
 /src/*
 /include/*
 
-!/bin/huffman_encode.c
-!/bin/main.c
+!/src/huffman_encode.c
+!/src/main.c
 !/include/huffman_encode.h
 !Makefile
