@@ -48,11 +48,20 @@ static void count_symbols(const char *filename)
     }
 
     symbol_count = (int *)calloc(nsymbols, sizeof(int));
+    for (int i=0; i<nsymbols; ++i)
+        symbol_count[i] = 0;
 
     // 1Byteずつ読み込み、カウントする
     /*
     write a code for counting
   */
+    char buf;
+    while (fread(&buf, sizeof(char), 1, fp))
+        symbol_count[(int)(buf-'\0')]++;
+    
+    for (int i=0; i<nsymbols; ++i)
+        printf("%4d", symbol_count[i]);
+    printf("\n");
 
     fclose(fp);
 }
