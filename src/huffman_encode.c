@@ -51,10 +51,6 @@ static void count_symbols(const char *filename)
     for (int i=0; i<nsymbols; ++i)
         symbol_count[i] = 0;
 
-    // 1Byteずつ読み込み、カウントする
-    /*
-    write a code for counting
-  */
     char buf;
     while (fread(&buf, sizeof(char), 1, fp))
         symbol_count[buf - '\0'] += 1;
