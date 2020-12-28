@@ -37,10 +37,6 @@ static void count_symbols(const char *filename)
     char buf;
     while (fread(&buf, sizeof(char), 1, fp))
         symbol_count[buf - '\0'] += 1;
-    
-    for (int i=0; i<nsymbols; ++i)
-        printf("%d  ", symbol_count[i]);
-    printf("\n");
 
     fclose(fp);
 }
@@ -94,19 +90,46 @@ static Node *build_tree()
     }
 
     free(symbol_count);
-    printf("%p\n", nodep[0]);
     return (n == 0) ? NULL : nodep[0];
 }
 
 static void traverse_tree(const int depth, const Node *np)
 {
-    if (np->left == NULL)
-        return;
-
+    //const int dummy = -1;
+    int flag[nsymbols] = {0};
+    int i = -1, 
+    Node *np_count = np;
+    for (int j=0; np_count != NULL; ++j)
+    {
+        i++;
+        if (np_count->left != NULL)
+            flag[j] = 1;
+        else
+            flag[j] = 0;
+        np_count = np_count->left;
+        
+    }
     
-
-    traverse_tree(depth + 1, np->left);
-    traverse_tree(depth + 1, np->right);
+    if (np->left == NULL && np->right == NULL)
+    {
+        if (np->symbol == (int)'\n')
+            printf("EOL\n");
+        if (np->symbol == (int)' ')
+            printf("Space\n");
+        printf("%c\n", (char)np->symbol);
+        return;
+    }
+    if (np->left->left == NULL && np->left->right == NULL)
+    {
+        printf("├──");
+        traverse_tree(depth + 1, np->left);
+    }
+    if (np->right != NULL)
+    {
+        printf("|");
+        traverse_tree(depth + 1, np->right);
+    }
+    
 }
 
 int encode(const char *filename)
