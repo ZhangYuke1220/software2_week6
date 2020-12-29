@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
 #include "huffman_encode.h"
 
 static const int nsymbols = 256 + 1;
@@ -10,6 +11,7 @@ typedef struct node
 {
     int symbol;
     int count;
+    char *huffman_code;
     struct node *left;
     struct node *right;
 } Node;
@@ -37,6 +39,10 @@ static void count_symbols(const char *filename)
     char buf;
     while (fread(&buf, sizeof(char), 1, fp))
         symbol_count[buf - '\0'] += 1;
+
+    for (int i=0; i<nsymbols; ++i)
+        if (symbol_count[i] != 0)
+            printf("%c, %d\n", (char)i, symbol_count[i]);
 
     fclose(fp);
 }
@@ -90,46 +96,39 @@ static Node *build_tree()
     }
 
     free(symbol_count);
+    nodep[0]->huffman_code = "\0";
     return (n == 0) ? NULL : nodep[0];
 }
 
 static void traverse_tree(const int depth, const Node *np)
 {
-    //const int dummy = -1;
-    int flag[nsymbols] = {0};
-    int i = -1, 
-    Node *np_count = np;
-    for (int j=0; np_count != NULL; ++j)
-    {
-        i++;
-        if (np_count->left != NULL)
-            flag[j] = 1;
-        else
-            flag[j] = 0;
-        np_count = np_count->left;
-        
-    }
     
     if (np->left == NULL && np->right == NULL)
     {
         if (np->symbol == (int)'\n')
-            printf("EOL\n");
-        if (np->symbol == (int)' ')
-            printf("Space\n");
-        printf("%c\n", (char)np->symbol);
+            printf("EOL %s\n", np->huffman_code);
+        else if (np->symbol == (int)' ')
+            printf("Space %s\n", np->huffman_code);
+        else
+            printf("%c %s\n", (char)np->symbol, np->huffman_code);
         return;
     }
-    if (np->left->left == NULL && np->left->right == NULL)
+
+    if (np->left != NULL)
     {
-        printf("├──");
-        traverse_tree(depth + 1, np->left);
+        np->left->huffman_code = (char *)malloc(sizeof(char) * (strlen(np->huffman_code) + 1));
+        strcpy(np->left->huffman_code, np->huffman_code);
+        np->left->huffman_code[strlen(np->huffman_code)] = '0';
     }
+
     if (np->right != NULL)
     {
-        printf("|");
-        traverse_tree(depth + 1, np->right);
+        np->right->huffman_code = (char *)malloc(sizeof(char) * (strlen(np->huffman_code) + 1));
+        strcpy(np->right->huffman_code, np->huffman_code);
+        np->right->huffman_code[strlen(np->huffman_code)] = '1';
     }
-    
+    traverse_tree(depth + 1, np->left);
+    traverse_tree(depth + 1, np->right);
 }
 
 int encode(const char *filename)
