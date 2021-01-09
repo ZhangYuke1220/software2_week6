@@ -1,7 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -I./include
 OBJS = src/main.o src/huffman_encode.o
-LDLIBS = -lm
 TARGET = bin/huffman0
 
 $(TARGET): $(OBJS)
