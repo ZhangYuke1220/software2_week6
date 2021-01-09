@@ -26,8 +26,8 @@ static void traverse_tree(const int depth, const Node *np);
 static void save_symbol(Node *np, int *tmp);
 static void display_tree(Node *np);
 int find_symbol(int *tmp, int x, int n);
-int symbol_digits(int n);
-unsigned int count_deepth(Node *np);
+int count_deepth(Node *np);
+int count_nodes(Node *np, int num);
 
 static void count_symbols(const char *filename)
 {
@@ -146,7 +146,7 @@ static void save_symbol(Node *np, int *tmp)
     }
 }
 
-unsigned int count_deepth(Node *np)
+int count_deepth(Node *np)
 {
     if (!np)
         return 0;
@@ -163,33 +163,41 @@ int find_symbol(int *tmp, int x, int n)
     return -1;
 }
 
-int symbol_digits(int n)
+int count_nodes(Node *np, int num)
 {
-    int number = 0;
-    while(n != 0)
+    if(!np)
+        return num;
+    else
     {
-        n /= 10;
-        number++;
+        num = count_nodes(np->left, num);
+        num = count_nodes(np->right, num);
     }
-    return number;
+    num++;
+    return num;
 }
 
 static void display_tree(Node *np)
 {
-    int abs_distance[2];
-    int symbol_array[np->count];
-    int vert_line[np->count];
-    int rlt_distance = 0;
-    unsigned int left_line_num = 0;
-    unsigned int right_line_num = 0;
-    unsigned int vert_line_num = 0;
-    unsigned int deepth = count_deepth(np);
-    save_symbol(np, symbol_array);
-
+    const int max_digits = 2;
     const int dummy_symbol = -1;
-    const int max_digits = 3;
+    const int nodes_num = count_nodes(np, 0);
+    printf("%d\n", nodes_num);
+    int abs_distance[2];
+    int symbol_array[nodes_num];
+    int vert_line[nodes_num];
+    int rlt_distance = 0;
+    int left_line_num = 0;
+    int right_line_num = 0;
+    int right_line_num2 = 0;
+    int vert_line_num = 0;
+    int deepth = count_deepth(np);
+    printf("%d\n", deepth);
+    save_symbol(np, symbol_array);
+    memset(symbol_array, 0, nodes_num);
+    memset(vert_line, 0, nodes_num);
+
     Node *dummy_node = (Node *)malloc(sizeof(Node));
-    *dummy_node = (Node){.right = NULL, .left = NULL, .symbol = dummy_symbol};
+    *dummy_node = (Node){.right = NULL, .left = NULL, .symbol = dummy_symbol, .huffman_code = NULL};
 
     Node *tmp_arr[np->count];
     tmp_arr[0] = np;
@@ -211,18 +219,41 @@ static void display_tree(Node *np)
         k++;
         if (k == pow(2, n)-1)
         {
+            right_line_num2 = 0;
+            vert_line_num = 0;
             for (int i = pow(2, n-1)-1; i<k; i++)
             {
-                abs_distance[0] = find_symbol(symbol_array, tmp_arr[i]->symbol, np->count) * max_digits;
+                left_line_num = 0;
+                right_line_num = 0;
+
+                abs_distance[0] = find_symbol(symbol_array, tmp_arr[i]->symbol, nodes_num) * max_digits;
+                //printf("%d %d\n", abs_distance[0], abs_distance[1]);
                 if (abs_distance[0] < 0)
                     continue;
                 rlt_distance = abs_distance[0] - abs_distance[1];
 
-                abs_distance[0] += symbol_digits(tmp_arr[i]->symbol) + 2;
+                abs_distance[0] += strlen(tmp_arr[i]->huffman_code) + 2;
                 abs_distance[1] = abs_distance[0];
+                //printf("%d %d\n", abs_distance[0], abs_distance[1]);
 
-                for (int m=0; m<rlt_distance; ++m)
-                    printf("-");
+                if (tmp_arr[i]->left != dummy_node && tmp_arr[i]->left != NULL)
+                {
+                    left_line_num = (abs_distance[0] - find_symbol(symbol_array, tmp_arr[i]->left->symbol, nodes_num)) * max_digits
+                                     - strlen(tmp_arr[i]->huffman_code) - 4;
+                    vert_line[vert_line_num++] = find_symbol(symbol_array, tmp_arr[i]->left->symbol, nodes_num) * max_digits + 2;
+                }
+                if (tmp_arr[i]->right != dummy_node && tmp_arr[i]->right != NULL)
+                {
+                    right_line_num = find_symbol(symbol_array, tmp_arr[i]->right->symbol, nodes_num) * max_digits
+                                     - abs_distance[0] + 2;
+                    vert_line[vert_line_num++] = find_symbol(symbol_array, tmp_arr[i]->right->symbol, nodes_num) * max_digits + 1;
+                }
+
+                for (int m=0; m<(rlt_distance - left_line_num - right_line_num2); ++m)
+                    printf(" ");
+                for (int m=0; m<left_line_num; ++m)
+                    printf("_");
+
                 if (tmp_arr[i]->symbol != dummy_symbol)
                 {
                     if (tmp_arr[i]->symbol == (int)(' '))
@@ -232,7 +263,22 @@ static void display_tree(Node *np)
                     else
                         printf("%c %s", (char)tmp_arr[i]->symbol, tmp_arr[i]->huffman_code);
                 }
+
+                for (int m=0; m<right_line_num; ++m)
+                    printf("_");
+                //printf("%d %d %d %d\n", left_line_num, right_line_num, right_line_num2, vert_line_num);
+
+                right_line_num2 = right_line_num;
             }
+            printf("\n");
+            if (vert_line_num)
+                for (int m=0; m<vert_line_num; ++m)
+                {
+                    for (int i=0; i<(m==0 ? vert_line[m] : (vert_line[m] - vert_line[m-1])); ++i)
+                        printf(" ");
+                    printf("|");
+                    vert_line[m]++;
+                }
             printf("\n");
             n++;
         }
