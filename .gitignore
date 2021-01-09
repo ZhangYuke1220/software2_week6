@@ -51,11 +51,4 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-/bin/*
-/src/*
-/include/*
-
-!/src/huffman_encode.c
-!/src/main.c
-!/include/huffman_encode.h
-!Makefile
+/.git/*
